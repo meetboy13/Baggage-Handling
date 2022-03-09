@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd" >
+<FBType Name="RingCriticalSection" Comment="Basic Function Block Type" >
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Rockwell Automation" Version="0.2" Author="JHC" Date="2003-12-04" Remarks="Renamed for better indexing." />
+  <VersionInfo Organization="Rockwell Automation" Version="0.1" Author="JHC" Date="2002-11-05" Remarks="Corrected missing ST element in Algorithm REQ." />
+  <VersionInfo Organization="Rockwell Automation" Version="0.0" Author="JHC" Date="2000-05-30" />
+  <CompilerInfo header="package fb.rt.cs725;" >
+  </CompilerInfo>
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Comment="Initialization Request" >
+        <With Var="INCOMING1" />
+        <With Var="INCOMING2" />
+        <With Var="EXITING" />
+      </Event>
+      <Event Name="REQ" Comment="Normal Execution Request" >
+        <With Var="INCOMING1" />
+        <With Var="INCOMING2" />
+        <With Var="EXITING" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Comment="Initialization Confirm" >
+        <With Var="STOP1" />
+        <With Var="STOP2" />
+      </Event>
+      <Event Name="CNF" Comment="Execution Confirmation" >
+        <With Var="STOP1" />
+        <With Var="STOP2" />
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="INCOMING1" Type="BOOL" Comment="Input event qualifier" />
+      <VarDeclaration Name="INCOMING2" Type="BOOL" />
+      <VarDeclaration Name="EXITING" Type="BOOL" />
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Name="STOP1" Type="BOOL" Comment="Output event qualifier" />
+      <VarDeclaration Name="STOP2" Type="BOOL" />
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="TOKEN_CLIENT" Type="BOOL" />
+      <VarDeclaration Name="TOKEN_BLOCK" Type="BOOL" />
+    </InternalVars>
+    <ECC >
+      <ECState Name="START" Comment="Initial State" x="482.35294" y="417.64706" >
+      </ECState>
+      <ECState Name="INIT" Comment="Initialization" x="923.5294" y="141.17647" >
+        <ECAction Algorithm="INIT" Output="INITO" />
+      </ECState>
+      <ECState Name="REQ" Comment="Normal execution" x="217.64705" y="752.94116" >
+        <ECAction Algorithm="REQ" Output="CNF" />
+      </ECState>
+      <ECState Name="CLIENT1" x="2647.0588" y="311.7647" >
+        <ECAction Algorithm="CLIENT1" Output="CNF" />
+      </ECState>
+      <ECState Name="CLIENT2" x="2594.1177" y="670.5882" >
+        <ECAction Algorithm="CLIENT2" Output="CNF" />
+      </ECState>
+      <ECState Name="RETURN" x="2447.0588" y="1300.0" >
+        <ECAction Algorithm="RETURN" Output="CNF" />
+      </ECState>
+      <ECState Name="CHECK2" x="1882.3529" y="635.2941" >
+      </ECState>
+      <ECTransition Source="START" Destination="INIT" Condition="INIT" x="688.2353" y="270.58823" />
+      <ECTransition Source="INIT" Destination="START" Condition="1" x="482.35294" y="129.41176" />
+      <ECTransition Source="START" Destination="REQ" Condition="REQ" x="482.35294" y="588.2353" />
+      <ECTransition Source="REQ" Destination="START" Condition="1" x="147.05882" y="417.64706" />
+      <ECTransition Source="CLIENT1" Destination="RETURN" Condition="REQ&#38;EXITING" x="4217.647" y="835.2941" />
+      <ECTransition Source="CLIENT2" Destination="RETURN" Condition="REQ&#38;EXITING" x="2911.7646" y="982.3529" />
+      <ECTransition Source="RETURN" Destination="START" Condition="1" x="1458.8235" y="876.4706" />
+      <ECTransition Source="START" Destination="CHECK2" Condition="REQ&#38;INCOMING2" x="1394.1177" y="500.0" />
+      <ECTransition Source="START" Destination="CLIENT1" Condition="REQ&#38;INCOMING1 &#38; !TOKEN_CLIENT" x="1905.8823" y="347.0588" />
+    </ECC>
+  <Algorithm Name="INIT" Comment="Initialization algorithm" >
+    <ST Text="TOKEN_BLOCK := FALSE;&#10;TOKEN_CLIENT := FALSE;&#10;" />
+  </Algorithm>
+  <Algorithm Name="REQ" Comment="Normally executed algorithm" >
+    <ST Text="IF TOKEN_CLIENT THEN&#10;	TOKEN_CLIENT := FALSE;&#10;ELSE&#10;	TOKEN_CLIENT := TRUE;&#10;END IF&#10;" />
+  </Algorithm>
+  <Algorithm Name="CLIENT1" >
+    <ST Text="TOKEN_BLOCK := TRUE;&#10;STOP1 := FALSE;&#10;STOP2 := TRUE;&#10;" />
+  </Algorithm>
+  <Algorithm Name="CLIENT2" >
+    <ST Text="TOKEN_BLOCK := TRUE;&#10;STOP1 := TRUE;&#10;STOP2 := FALSE;&#10;" />
+  </Algorithm>
+  <Algorithm Name="RETURN" >
+    <ST Text="TOKEN_BLOCK := FALSE;&#10;STOP1 := FALSE;&#10;STOP2 := FALSE;&#10;" />
+  </Algorithm>
+  </BasicFB>
+</FBType>

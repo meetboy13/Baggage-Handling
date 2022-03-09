@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd" >
+<FBType Name="RingCriticalSection" Comment="Basic Function Block Type" >
+  <Identification Standard="61499-2" />
+  <VersionInfo Organization="Rockwell Automation" Version="0.2" Author="JHC" Date="2003-12-04" Remarks="Renamed for better indexing." />
+  <VersionInfo Organization="Rockwell Automation" Version="0.1" Author="JHC" Date="2002-11-05" Remarks="Corrected missing ST element in Algorithm REQ." />
+  <VersionInfo Organization="Rockwell Automation" Version="0.0" Author="JHC" Date="2000-05-30" />
+  <CompilerInfo header="package fb.rt.cs725;" >
+  </CompilerInfo>
+  <InterfaceList>
+    <EventInputs>
+      <Event Name="INIT" Comment="Initialization Request" >
+        <With Var="INCOMING1" />
+        <With Var="INCOMING2" />
+        <With Var="EXITING" />
+      </Event>
+      <Event Name="REQ" Comment="Normal Execution Request" >
+        <With Var="INCOMING1" />
+        <With Var="INCOMING2" />
+        <With Var="EXITING" />
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Name="INITO" Comment="Initialization Confirm" >
+      </Event>
+      <Event Name="CNF" Comment="Execution Confirmation" >
+      </Event>
+      <Event Name="START1" >
+      </Event>
+      <Event Name="STOP1" >
+      </Event>
+      <Event Name="START2" >
+      </Event>
+      <Event Name="STOP2" >
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Name="INCOMING1" Type="BOOL" Comment="Input event qualifier" />
+      <VarDeclaration Name="INCOMING2" Type="BOOL" />
+      <VarDeclaration Name="EXITING" Type="BOOL" />
+    </InputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Name="TOKEN_CLIENT" Type="BOOL" />
+      <VarDeclaration Name="TOKEN_BLOCK" Type="BOOL" />
+    </InternalVars>
+    <ECC >
+      <ECState Name="START" Comment="Initial State" x="482.35294" y="417.64706" >
+      </ECState>
+      <ECState Name="INIT" Comment="Initialization" x="923.5294" y="141.17647" >
+        <ECAction Algorithm="INIT" Output="INITO" />
+      </ECState>
+      <ECState Name="PASS" Comment="Normal execution" x="194.11765" y="1052.9412" >
+        <ECAction Algorithm="PASS" />
+      </ECState>
+      <ECState Name="CLIENT1" x="2647.0588" y="311.7647" >
+        <ECAction Algorithm="CLIENT1" Output="CNF" />
+      </ECState>
+      <ECState Name="CLIENT2" x="2594.1177" y="670.5882" >
+        <ECAction Algorithm="CLIENT2" Output="CNF" />
+      </ECState>
+      <ECState Name="RETURN" x="2447.0588" y="1300.0" >
+        <ECAction Algorithm="RETURN" Output="CNF" />
+      </ECState>
+      <ECTransition Source="START" Destination="INIT" Condition="INIT" x="688.2353" y="270.58823" />
+      <ECTransition Source="INIT" Destination="START" Condition="1" x="482.35294" y="129.41176" />
+      <ECTransition Source="START" Destination="PASS" Condition="REQ&#38;!TOKEN_BLOCK" x="617.64703" y="764.7059" />
+      <ECTransition Source="PASS" Destination="START" Condition="1" x="123.52941" y="717.64703" />
+      <ECTransition Source="CLIENT1" Destination="RETURN" Condition="REQ&#38;EXITING" x="4217.647" y="835.2941" />
+      <ECTransition Source="CLIENT2" Destination="RETURN" Condition="REQ&#38;EXITING" x="2758.8235" y="970.5882" />
+      <ECTransition Source="RETURN" Destination="START" Condition="1" x="1358.8235" y="776.4706" />
+      <ECTransition Source="START" Destination="CLIENT1" Condition="REQ&#38;INCOMING1 &#38;&#38; !TOKEN_CLIENT" x="1670.5883" y="311.7647" />
+      <ECTransition Source="START" Destination="CLIENT2" Condition="REQ&#38;INCOMING2 &#38;&#38; TOKEN_CLIENT" x="1717.647" y="511.7647" />
+    </ECC>
+  <Algorithm Name="INIT" Comment="Initialization algorithm" >
+    <ST Text="TOKEN_BLOCK := FALSE;&#10;TOKEN_CLIENT := FALSE;&#10;" />
+  </Algorithm>
+  <Algorithm Name="PASS" Comment="Normally executed algorithm" >
+    <ST Text="System.out.println(&#34;INCREMENTING CRITICAL: NOW &#34; + TOKEN_CLIENT);&#10;IF TOKEN_CLIENT THEN&#10;TOKEN_CLIENT := FALSE;&#10;ELSE&#10;TOKEN_CLIENT := TRUE;&#10;END_IF&#10;" />
+  </Algorithm>
+  <Algorithm Name="CLIENT1" >
+    <ST Text="System.out.println(&#34;CLIENT ONE HAS CRITICAL SECTION&#34;);&#10;TOKEN_BLOCK := TRUE;&#10;START1.serviceEvent(this);&#10;STOP2.serviceEvent(this);&#10;" />
+  </Algorithm>
+  <Algorithm Name="CLIENT2" >
+    <ST Text="System.out.println(&#34;CLIENT TWO HAS CRITICAL SECTION&#34;);&#10;TOKEN_BLOCK := TRUE;&#10;STOP1.serviceEvent(this);&#10;START2.serviceEvent(this);&#10;" />
+  </Algorithm>
+  <Algorithm Name="RETURN" >
+    <ST Text="System.out.println(&#34;EXITING CRITICAL SECTION&#34;);&#10;TOKEN_BLOCK := FALSE;&#10;START1.serviceEvent(this);&#10;START2.serviceEvent(this);&#10;" />
+  </Algorithm>
+  </BasicFB>
+</FBType>
